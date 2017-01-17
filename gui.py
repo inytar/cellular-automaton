@@ -28,6 +28,8 @@ class App(object):
         """
         self._running = False
         self.color = color
+        if not self.color:
+            self.ALIVE = pg.Color('black')
         self._display_surf = None
         self.density = density
         self.size = self.width, self.height = 640, 640
@@ -86,7 +88,6 @@ class App(object):
             if self.color:
                 self.ALIVE.hsla = ((self.ALIVE.hsla[0] + 1) % 360,) + \
                     self.ALIVE.hsla[1:]
-            # self.ALIVE.hsla[0] = self.ALIVE.hsla[0] + 1
             return
         self._clock.tick(self.framerate * 2)
         if self.create is not None:
@@ -135,6 +136,7 @@ class App(object):
             # print(self._clock.get_fps())
         self.on_cleanup()
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='A 2D cellular automaton game'
@@ -142,9 +144,11 @@ def parse_args():
     default_rule = 'B3/S23M'
     default_density = 0
     parser.add_argument('rule', nargs='?',
-                        help='The rule of the game.')
+                        help='the rule of the game')
     parser.add_argument('density', nargs='?', type=float,
-                        help='The starting density of the game.')
+                        help='the starting density of the game')
+    parser.add_argument('--no-color', '-nc', help='run in black and white',
+                        action='store_false', dest='color')
     arguments = parser.parse_args()
     if arguments.density is None and arguments.rule:
         try:
