@@ -1,4 +1,6 @@
 import argparse
+import functools
+import operator
 import random
 import sys
 
@@ -9,11 +11,11 @@ import twod
 
 class App(object):
 
-    BLACK = (0, 0, 0)
-    WHITE = (255, 255, 255)
-    GREY = (218, 218, 218)
+    ALIVE = pg.Color('deeppink')
+    DEAD = pg.Color('white')
+    PAUSE = pg.Color('grey88')
 
-    def __init__(self, rule='B3/S23M', density=0):
+    def __init__(self, rule='B3/S23M', density=0, color=True):
         """A 2D cellular automaton game.
 
         rule: str: A valid cellular automaton rule, in the format
@@ -25,6 +27,7 @@ class App(object):
         0 (no alive cells) and 100 (all cell alive) can be used.
         """
         self._running = False
+        self.color = color
         self._display_surf = None
         self.density = density
         self.size = self.width, self.height = 640, 640
@@ -32,12 +35,10 @@ class App(object):
         self.cell_size = 8
         self.framerate = 5
         # print(tuple(v // self.cell_size for v in self.size))
-        self.state = tuple(
-            tuple(
-                1 if random.random() * 100 < self.density else 0
-                for _x in range(self.width // self.cell_size)
-            ) for _y in range(self.height // self.cell_size)
-        )
+        self.state = twod.create_array(
+            map(operator.methodcaller('__floordiv__', self.cell_size),
+                self.size),
+            self.density)
 
     def on_init(self):
         pg.init()
@@ -80,31 +81,39 @@ class App(object):
             if self.one_step:
                 self.play = False
                 self.one_step = False
+            if self.color:
+                self.ALIVE.hsla = ((self.ALIVE.hsla[0] + 1) % 360,) + \
+                    self.ALIVE.hsla[1:]
+            # self.ALIVE.hsla[0] = self.ALIVE.hsla[0] + 1
             return
         self._clock.tick(self.framerate * 2)
         if self.create is not None:
             mouse_pos = pg.mouse.get_pos()
             cell_pos = tuple(p // self.cell_size for p in mouse_pos)
-            n_state = int(self.create)
-            self.state = tuple(
-                tuple(
-                    self.state[y][x] if (x, y) != cell_pos else n_state
-                    for x in range(self.width // self.cell_size)
-                ) for y in range(self.height // self.cell_size)
-            )
+            if self.create:
+                self.state = twod.bear_cell(cell_pos, self.state)
+            else:
+                self.state = twod.kill_cell(cell_pos, self.state)
 
     def render_state(self):
-        background = self.WHITE
+        background = self.DEAD
         if not self.play:
-            background = self.GREY
+            background = self.PAUSE
         self._display_surf.fill(background)
         for y in range(self.height // self.cell_size):
             for x in range(self.width // self.cell_size):
-                if self.state[y][x]:
+                cell = self.state[y][x]
+                if cell:
+                    color = self.ALIVE
+                    if self.color:
+                        color = pg.Color(*color)
+                        color.hsla = ((color.hsla[0] + cell.time_spam)
+                                      % 360,) + \
+                            color.hsla[1:]
                     x_loc = x * self.cell_size
                     y_loc = y * self.cell_size
                     self._display_surf.fill(
-                        self.BLACK,
+                        color,
                         rect=(x_loc, y_loc, self.cell_size, self.cell_size)
                     )
 

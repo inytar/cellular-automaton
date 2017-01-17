@@ -49,10 +49,56 @@ def print_rule(rule):
 def next_state(current, rule):
     return tuple(
         tuple(
-            (1 if alive_neighbours((x, y), current, rule[2]) in
-             rule[current[y][x]] else 0) for
+            (current[y][x].bear() if
+             alive_neighbours((x, y), current, rule[2]) in
+             rule[current[y][x]] else current[y][x].kill()) for
             x in range(len(current[y]))
         ) for y in range(len(current))
+    )
+
+
+def create_array(size, density=50):
+    size = tuple(size)
+    return tuple(
+        tuple(Alive() if random.random() * 100 < density else Dead()
+              for _x in range(size[1]))
+        for _y in range(size[0])
+    )
+
+
+def invert_cell(cell_pos, array):
+    cell_pos = tuple(cell_pos)
+    return tuple(
+        tuple(
+            array[y][x] if (x, y) != cell_pos else ~array[x][y]
+            for x in range(len(array[y]))
+        ) for y in range(len(array))
+    )
+
+
+def invert(array):
+    return tuple(
+        tuple(
+            ~v for v in row
+        ) for row in array
+    )
+
+
+def bear_cell(cell_pos, array):
+    return tuple(
+        tuple(
+            array[y][x] if (x, y) != cell_pos else array[y][x].bear()
+            for x in range(len(array[y]))
+        ) for y in range(len(array))
+    )
+
+
+def kill_cell(cell_pos, array):
+    return tuple(
+        tuple(
+            array[y][x] if (x, y) != cell_pos else array[y][x].kill()
+            for x in range(len(array[y]))
+        ) for y in range(len(array))
     )
 
 
@@ -74,14 +120,48 @@ def print_state(array):
     print('‾' * len(array[-1]) + '‾‾')
 
 
-def random_automaton(rule, size, density=.5, steps=10):
-    start = tuple(
-        tuple(1 if random.random() < density else 0
-              for _y in range(size[1]))
-        for _x in range(size[0])
-    )
+def random_automaton(rule, size, density=50, steps=10):
+    start = create_array(size, density)
     run_automaton(rule, start, steps)
 
 
+class Alive(int):
+
+    def __new__(cls):
+        return super().__new__(cls, 1)
+
+    def __init__(self, time_spam=0):
+        self.time_spam = time_spam
+
+    def __invert__(self):
+        return Dead()
+
+    def bear(self):
+        self.time_spam += 1
+        return self
+
+    def kill(self):
+        return Dead()
+
+
+class Dead(int):
+
+    def __new__(cls):
+        return super().__new__(cls, 0)
+
+    def __init__(self, time_spam=0):
+        self.time_spam = time_spam
+
+    def __invert__(self):
+        return Alive()
+
+    def bear(self):
+        return Alive()
+
+    def kill(self):
+        self.time_spam += 1
+        return self
+
+
 if __name__ == '__main__':
-    random_automaton('B2/S2M', (5, 205), density=.05, steps=30)
+    random_automaton('B3/S23M', (5, 205), density=10, steps=10)
