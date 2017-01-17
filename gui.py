@@ -35,8 +35,8 @@ class App(object):
         self.state = tuple(
             tuple(
                 1 if random.random() * 100 < self.density else 0
-                for _x in range(self.height // self.cell_size)
-            ) for _y in range(self.width // self.cell_size)
+                for _x in range(self.width // self.cell_size)
+            ) for _y in range(self.height // self.cell_size)
         )
 
     def on_init(self):
@@ -60,8 +60,8 @@ class App(object):
             return
         if not self.play and event.type == pg.MOUSEBUTTONDOWN:
             mouse_pos = pg.mouse.get_pos()
-            state_pos = tuple(p // self.cell_size for p in mouse_pos)
-            self.create = not self.state[state_pos[0]][state_pos[1]]
+            cell_pos = tuple(p // self.cell_size for p in mouse_pos)
+            self.create = not self.state[cell_pos[1]][cell_pos[0]]
         if event.type == pg.MOUSEBUTTONUP:
             self.create = None
         if event.type == pg.KEYDOWN:
@@ -84,13 +84,13 @@ class App(object):
         self._clock.tick(self.framerate * 2)
         if self.create is not None:
             mouse_pos = pg.mouse.get_pos()
-            state_pos = tuple(p // self.cell_size for p in mouse_pos)
+            cell_pos = tuple(p // self.cell_size for p in mouse_pos)
             n_state = int(self.create)
             self.state = tuple(
                 tuple(
-                    self.state[y][x] if (y, x) != state_pos else n_state
-                    for x in range(self.height // self.cell_size)
-                ) for y in range(self.width // self.cell_size)
+                    self.state[y][x] if (x, y) != cell_pos else n_state
+                    for x in range(self.width // self.cell_size)
+                ) for y in range(self.height // self.cell_size)
             )
 
     def render_state(self):
@@ -98,14 +98,14 @@ class App(object):
         if not self.play:
             background = self.GREY
         self._display_surf.fill(background)
-        for x in range(self.height // self.cell_size):
-            for y in range(self.width // self.cell_size):
+        for y in range(self.height // self.cell_size):
+            for x in range(self.width // self.cell_size):
                 if self.state[y][x]:
                     x_loc = x * self.cell_size
                     y_loc = y * self.cell_size
                     self._display_surf.fill(
                         self.BLACK,
-                        rect=(y_loc, x_loc, self.cell_size, self.cell_size)
+                        rect=(x_loc, y_loc, self.cell_size, self.cell_size)
                     )
 
     def on_render(self):

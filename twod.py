@@ -9,19 +9,19 @@ rule_re = re.compile(r'^B\d*/S\d*[MV]?$')
 
 def alive_neighbours(position, array, diagonals='M'):
     # diagonals=True means Moore neighbours, else Von Neumann neighbours.
-    x_len = len(array)
+    y_len = len(array)
     # We assume that the array is always rectangular.
-    y_len = len(array[0])
+    x_len = len(array[0])
     if diagonals == 'V':
         def filter_(x, y):
             return x == 0 or y == 0 and x != y
     else:
         def filter_(x, y):
             return not x == y == 0
-    neighbours = (array[position[0] + x if position[0] + x < x_len else 0]
-                  [position[1] + y if position[1] + y < y_len else 0]
-                  for x in range(-1, 2)
-                  for y in range(-1, 2) if filter_(x, y))
+    neighbours = (array[position[1] + y if position[1] + y < y_len else 0]
+                  [position[0] + x if position[0] + x < x_len else 0]
+                  for y in range(-1, 2)
+                  for x in range(-1, 2) if filter_(x, y))
     return sum(neighbours)
 
 
@@ -50,9 +50,9 @@ def next_state(current, rule):
     return tuple(
         tuple(
             (1 if alive_neighbours((x, y), current, rule[2]) in
-             rule[current[x][y]] else 0) for
-            y in range(len(current[x]))
-        ) for x in range(len(current))
+             rule[current[y][x]] else 0) for
+            x in range(len(current[y]))
+        ) for y in range(len(current))
     )
 
 
