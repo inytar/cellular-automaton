@@ -60,8 +60,7 @@ class App(object):
             self._running = False
             return
         if not self.play and event.type == pg.MOUSEBUTTONDOWN:
-            mouse_pos = pg.mouse.get_pos()
-            cell_pos = tuple(p // self.cell_size for p in mouse_pos)
+            cell_pos = self.get_mouse_cell()
             self.create = not self.state[cell_pos[1]][cell_pos[0]]
         if event.type == pg.MOUSEBUTTONUP:
             self.create = None
@@ -73,6 +72,9 @@ class App(object):
                 self.create = None
                 self.play = True
                 self.one_step = True
+
+    def get_mouse_cell(self):
+        return tuple(p // self.cell_size for p in pg.mouse.get_pos())
 
     def on_loop(self):
         if self.play:
@@ -88,8 +90,7 @@ class App(object):
             return
         self._clock.tick(self.framerate * 2)
         if self.create is not None:
-            mouse_pos = pg.mouse.get_pos()
-            cell_pos = tuple(p // self.cell_size for p in mouse_pos)
+            cell_pos = self.get_mouse_cell()
             if self.create:
                 self.state = twod.bear_cell(cell_pos, self.state)
             else:
